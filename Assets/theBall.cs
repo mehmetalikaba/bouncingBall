@@ -1,20 +1,33 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class theBall : MonoBehaviour
 {
-    public float rotationSpeed = 100f;
+
     public float bounceForce = 200f;
-    public float rotationForce = 50f;
+    public float thePoint, highScore, rotationSpeed, rotationForce;
+
+    public GameObject highScoreTextObject;
+    public GameObject thePointTextObject;
+    public GameObject yourPointTextEndObject;
+    public GameObject thePointTextEndObject;
+
+    public TextMeshProUGUI highScoreText;
+    public TextMeshProUGUI thePointText;
+    public TextMeshProUGUI yourPointTextEnd;
+    public TextMeshProUGUI thePointTextEnd;
 
     Rigidbody2D rb;
 
     public float bounceTimer;
-    public bool isGround, gameOver;
+    public bool isGround, gameOver, gameStarted;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        highScore = PlayerPrefs.GetFloat("highScore", 0f);
+        highScoreText.text = highScore.ToString();
     }
 
     void Update()
@@ -32,25 +45,54 @@ public class theBall : MonoBehaviour
         }
         if (isGround)
         {
-            bounceTimer += Time.deltaTime;
-            if (bounceTimer > 0.5f)
+            if (gameStarted)
+            {
+                thePoint += 1;
+                thePointText.text = thePoint.ToString();
+
+                bounceTimer += Time.deltaTime;
+                if (bounceTimer > 0.5f)
+                {
+                    if (isGround)
+                    {
+                        bouncer();
+                    }
+                    bounceTimer = 0;
+                }
+            }
+            else if (!gameStarted)
             {
                 if (isGround)
-                {
                     bouncer();
-                }
-                bounceTimer = 0;
             }
         }
 
         transform.Rotate(0, 0, -rotationSpeed * Time.deltaTime);
 
-        if (transform.position.y >= 4.6f || transform.position.y <= -4.6f)
+        if (transform.position.y >= 4.65f || transform.position.y <= -4.65f)
         {
-            gameOver = true;
-        }
+            if (!gameOver)
+            {
+                gameOver = true;
+                rotationSpeed = 0;
+                bounceForce = 0;
+                rotationForce = 0;
+                rb.gravityScale = 0;
+                thePointTextObject.SetActive(false);
+                thePointTextEndObject.SetActive(true);
+                yourPointTextEndObject.SetActive(true);
+                thePointTextEnd.text = thePoint.ToString();
+                if (thePoint > highScore)
+                {
+                    highScore = thePoint;
+                    PlayerPrefs.SetFloat("highScore", highScore);
+                    highScoreText.text = highScore.ToString();
+                }
 
+            }
+        }
     }
+
 
     void FixedUpdate()
     {
